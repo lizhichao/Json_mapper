@@ -135,42 +135,24 @@ $r2 = (new JsonMapper())->map(['id' => 123], Result::class);   // int
 - **无 Attribute 解析**：仅使用原生 Reflection + PHPDoc 字符串解析
 - **use 声明缓存**：解析一次后缓存，同类的映射不重复解析
 
-## 全局辅助函数 `json_to_object()`
+## API
 
-项目提供了全局函数 `json_to_object()`，是 `JsonMapper` 的上层封装，支持**字符串 JSON**、**数组**、**stdClass** 三种输入，且自动区分**单对象**与**对象列表**：
+### `mapFrom(array|stdClass|string|null $data, object|string $class): array|object|null`
 
-```php
-json_to_object(
-    array|stdClass|string|null $data,
-    object|string $class
-): array|object|null
-```
-
-### 单对象映射
+支持**字符串 JSON**、**数组**、**stdClass** 三种输入，自动区分**单对象**与**对象列表**：
 
 ```php
-$json = '{"name": "Alice", "status": 1}';
-$user = json_to_object($json, User::class);
-// 返回 User 实例
+$mapper = new JsonMapper();
+
+// 字符串 JSON 自动解码
+$user = $mapper->mapFrom('{"name": "Alice", "status": 1}', User::class);
+
+// 对象列表
+$users = $mapper->mapFrom('[{"name": "Alice"}, {"name": "Bob"}]', User::class);
+
+// null → null
+$result = $mapper->mapFrom(null, User::class); // null
 ```
-
-### 对象列表映射
-
-```php
-$json = '[{"name": "Alice"}, {"name": "Bob"}]';
-$users = json_to_object($json, User::class);
-// 返回 User[]
-```
-
-### 配合 ORM Model 使用
-
-```php
-// 直接传入已有实例，避免 Model 构造函数副作用
-$order = new Order();
-json_to_object(['title' => 'Test', 'status' => 1], $order);
-```
-
-### 行为说明
 
 | 输入 | 结果 |
 |------|------|
@@ -178,9 +160,6 @@ json_to_object(['title' => 'Test', 'status' => 1], $order);
 | JSON 字符串 | 自动 `json_decode` 后映射 |
 | 列表数组 `[ {...}, {...} ]` | 返回 `array<T>` |
 | 关联数组 / stdClass | 返回 `T` |
-| 已有对象实例 | 克隆后填充，返回克隆体 |
-
-## API
 
 ### `map(array|stdClass $data, object|string $class): object`
 
