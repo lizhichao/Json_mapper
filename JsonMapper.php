@@ -129,7 +129,7 @@ class JsonMapper
 
         $result = [];
         foreach ($value as $item) {
-            $result[] = (is_array($item) && array_is_list($value))
+            $result[] = (is_array($item) && array_is_list($item))
                 ? $this->castArrayValue($item, $property)
                 : $this->map($item, $itemClass);
         }
@@ -234,3 +234,4 @@ class JsonMapper
         return $cache[$className] = $uses;
     }
 }
+
