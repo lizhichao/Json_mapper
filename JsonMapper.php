@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 class JsonMapper
 {
+    public function __construct(public bool $assignDynamicProperties = false)
+    {
+    }
+    
     /**
      * 从各种来源映射：自动 JSON 解码，自动判断单对象/对象列表
      *
@@ -54,7 +58,9 @@ class JsonMapper
         foreach ($dataArray as $key => $value) {
             // class 中不存在该属性 → 直接赋值（动态属性）
             if (!$refClass->hasProperty($key)) {
-                $object->{$key} = $value;
+                if ($this->assignDynamicProperties) {
+                    $object->{$key} = $value;
+                }
                 continue;
             }
 
