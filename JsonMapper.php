@@ -7,7 +7,7 @@ class JsonMapper
     public function __construct(public bool $assignDynamicProperties = false)
     {
     }
-    
+
     /**
      * 从各种来源映射：自动 JSON 解码，自动判断单对象/对象列表
      *
@@ -56,7 +56,7 @@ class JsonMapper
         $dataArray = is_object($data) ? (array)$data : $data;
 
         foreach ($dataArray as $key => $value) {
-            // class 中不存在该属性 → 直接赋值（动态属性）
+            // class 中不存在该属性 → 动态属性
             if (!$refClass->hasProperty($key)) {
                 if ($this->assignDynamicProperties) {
                     $object->{$key} = $value;
@@ -101,6 +101,12 @@ class JsonMapper
         }
         // 内置类型
         if ($type->isBuiltin()) {
+            if (is_object($value)) {
+                if ($typeName === 'string' && method_exists($value, '__toString')) {
+                    return $value->__toString();
+                }
+                return $value;
+            }
             settype($value, $typeName);
             return $value;
         }
@@ -204,6 +210,7 @@ class JsonMapper
         $collect = false;
         $alias = '';
         $full = '';
+        $inAlias = false;
 
         foreach ($tokens as $token) {
             if (is_array($token)) {
@@ -213,10 +220,10 @@ class JsonMapper
                     T_STRING,
                     T_NAME_QUALIFIED => match ($collect) {
                         'ns' => $namespace .= $token[1],
-                        'use' => $full .= $token[1],
+                        'use' => $inAlias ? $alias .= $token[1] : $full .= $token[1],
                         default => null
                     },
-                    T_AS => $alias = '',
+                    T_AS => $inAlias = true,
                     default => null
                 };
             } else {
@@ -226,6 +233,7 @@ class JsonMapper
                     $uses[$short] = $full;
                     $full = '';
                     $alias = '';
+                    $inAlias = false;
                     if ($token === ';') {
                         $collect = false;
                     }
@@ -240,4 +248,3 @@ class JsonMapper
         return $cache[$className] = $uses;
     }
 }
-
